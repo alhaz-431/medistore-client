@@ -61,3 +61,4 @@ const MedicineModal = ({ medicine, onClose }: ModalProps) => {
 };
 
 export default MedicineModal;
+

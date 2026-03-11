@@ -55,3 +55,4 @@ const Navbar = ({ searchTerm, setSearchTerm, cartCount }: NavbarProps) => {
 };
 
 export default Navbar;
+

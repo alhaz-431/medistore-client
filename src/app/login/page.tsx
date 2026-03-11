@@ -1,16 +1,47 @@
 "use client";
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation"; 
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Logging in with:", { email, password });
-    // এখানে আমরা পরে ব্যাকএন্ডের লগইন এপিআই কল করবো
-    alert("লগইন রিকোয়েস্ট পাঠানো হয়েছে!");
+    setLoading(true);
+
+    try {
+      // এখানে আপনার দেওয়া আসল লিঙ্কটি বসিয়ে দিয়েছি
+      const res = await fetch("https://medistore-backend-server.vercel.app/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        // ১. টোকেন ও ইউজার ডাটা ব্রাউজারে সেভ করা
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+
+        alert("লগইন সফল হয়েছে! 🚀");
+        
+        // ২. সরাসরি হোম পেজে পাঠিয়ে দেওয়া
+        router.push("/");
+        router.refresh(); 
+      } else {
+        alert(data.error || "লগইন ব্যর্থ হয়েছে!");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("সার্ভারে কানেক্ট করা যাচ্ছে না! আপনার ইন্টারনেট বা ব্যাকএন্ড চেক করুন।");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -35,7 +66,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">পাসওয়ার্ড</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">পাসওয়ার্ড</label>
             <input 
               type="password" 
               placeholder="••••••••"
@@ -46,18 +77,12 @@ export default function LoginPage() {
             />
           </div>
 
-          <div className="flex items-center justify-between text-sm">
-            <label className="flex items-center text-gray-600">
-              <input type="checkbox" className="mr-2 rounded" /> মনে রাখুন
-            </label>
-            <a href="#" className="text-blue-600 hover:underline">পাসওয়ার্ড ভুলে গেছেন?</a>
-          </div>
-
           <button 
             type="submit" 
-            className="w-full bg-blue-700 text-white py-3 rounded-xl font-bold hover:bg-blue-800 transition shadow-lg shadow-blue-100"
+            disabled={loading}
+            className={`w-full ${loading ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-700 hover:bg-blue-800'} text-white py-3 rounded-xl font-bold transition shadow-lg shadow-blue-100`}
           >
-            লগইন করুন
+            {loading ? "অপেক্ষা করুন..." : "লগইন করুন"}
           </button>
         </form>
 
