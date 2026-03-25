@@ -26,8 +26,12 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        suppressHydrationWarning={true} // এই লাইনটি আপনার এরর ফিক্স করবে
+        suppressHydrationWarning={true}
       >
+        {/* রুট লেআউট থেকে নেভবার সরানো হলো। 
+            এখন হোম পেজে (page.tsx) এবং ড্যাশবোর্ডে 
+            আলাদাভাবে নেভবার কল করলে আর ডাবল দেখাবে না।
+        */}
         {children}
       </body>
     </html>

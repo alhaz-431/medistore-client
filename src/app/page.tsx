@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import Navbar from "@/components/Navbar"; 
+import Navbar from "@/components/Navbar"; // নেভবার আবার ফিরিয়ে আনা হলো
 import MedicineModal from "@/components/MedicineModal";
 
 interface IMedicine {
@@ -16,33 +16,27 @@ export default function Home() {
   const [medicines, setMedicines] = useState<IMedicine[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedMedicine, setSelectedMedicine] = useState<IMedicine | null>(null);
-  const [cartCount, setCartCount] = useState(0); 
+  const [cartCount, setCartCount] = useState(0); // কার্ট স্টেট যোগ করা হলো
 
   useEffect(() => {
+    const API_URL = "https://medistore-backend-server.vercel.app/api/medicines";
     const delayDebounceFn = setTimeout(() => {
-      axios.get(`http://localhost:5000/api/medicines?searchTerm=${searchTerm}`)
+      axios.get(`${API_URL}?search=${searchTerm}`)
         .then((res) => setMedicines(res.data))
         .catch((err) => console.log("ডাটা লোড করতে সমস্যা:", err));
     }, 300);
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm]);
 
-  // Add to cart function
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.stopPropagation(); 
+  // কার্ট বাটনে ক্লিক করলে সংখ্যা বাড়বে
+  const handleAddToCart = () => {
     setCartCount(prev => prev + 1);
-    // সুন্দর একটি অ্যালার্ট বা কনফার্মেশন
-    console.log("Item added to cart");
   };
 
   return (
     <main className="bg-slate-50 min-h-screen">
-      {/* Navbar-এ এখন cartCount-ও পাঠানো হচ্ছে */}
-      <Navbar 
-        searchTerm={searchTerm} 
-        setSearchTerm={setSearchTerm} 
-        cartCount={cartCount} 
-      />
+      {/* নেভবার এখানে কল করা হয়েছে এবং কার্ট কাউন্ট পাঠানো হচ্ছে */}
+      <Navbar cartCount={cartCount} />
 
       <div className="p-10 max-w-7xl mx-auto">
         <h2 className="text-xl font-semibold mb-6 text-gray-700">
@@ -53,6 +47,7 @@ export default function Home() {
           )}
         </h2>
 
+        {/* কার্ড গ্রিড */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {medicines.map((medicine) => (
             <div 
@@ -73,7 +68,7 @@ export default function Home() {
                 
                 <div className="flex gap-2">
                   <button 
-                    onClick={handleAddToCart}
+                    onClick={handleAddToCart} // এখানে ফাংশনটি কল করা হয়েছে
                     className="flex-1 bg-green-500 text-white py-2 rounded-lg font-bold hover:bg-green-600 transition shadow-md"
                   >
                     Add to Cart
@@ -90,7 +85,6 @@ export default function Home() {
           ))}
         </div>
 
-        {/* যদি কোনো ডাটা না থাকে */}
         {medicines.length === 0 && (
           <div className="text-center py-20 text-gray-400">
             No medicines found matching &quot;{searchTerm}&quot;
