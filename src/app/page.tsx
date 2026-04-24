@@ -1,13 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
-import Link from "next/link";
-import Navbar from "@/components/Navbar";
-import MedicineModal from "@/components/MedicineModal";
+import { motion } from "framer-motion"; 
 import { 
-  FiTruck, FiShield, FiPhoneCall, FiStar, 
-  FiArrowRight, FiPlusSquare, FiActivity, FiMail, FiMapPin, 
-  FiFacebook, FiTwitter, FiInstagram, FiLinkedin, FiClock
+  FiTruck, FiShield, FiPhoneCall, 
+  FiArrowRight, FiSearch, FiShoppingCart, FiActivity, FiPlus, FiEye 
 } from "react-icons/fi";
 
 interface IMedicine {
@@ -16,197 +13,191 @@ interface IMedicine {
   manufacturer: string;
   price: number;
   stock: number;
+  image?: string; 
 }
 
 export default function Home() {
   const [medicines, setMedicines] = useState<IMedicine[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedMedicine, setSelectedMedicine] = useState<IMedicine | null>(null);
-  const [cartCount, setCartCount] = useState(0);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const medicinesRef = useRef<HTMLDivElement>(null);
+
+  const medicineImages = [
+    "https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?q=80&w=500",
+    "https://images.unsplash.com/photo-1576602976047-174e57a47881?q=80&w=500",
+    "https://images.unsplash.com/photo-1607619056574-7b8d3ee536b2?q=80&w=500",
+    "https://images.unsplash.com/photo-1512069772995-ec65ed45afd6?q=80&w=500",
+    "https://images.unsplash.com/photo-1631549916768-4119b2e5f926?q=80&w=500",
+    "https://images.unsplash.com/photo-1585435557343-3b092031a831?q=80&w=500",
+    "https://images.unsplash.com/photo-1587854692152-cbe660dbbb88?q=80&w=500",
+    "https://images.unsplash.com/photo-1550572017-ed200f5e63d3?q=80&w=500",
+    "https://images.unsplash.com/photo-1628771065518-0d82f1110547?q=80&w=500",
+    "https://images.unsplash.com/photo-1547489432-cf93fa6c71ee?q=80&w=500",
+  ];
 
   useEffect(() => {
     const API_URL = "https://medistore-backend-server.vercel.app/api/medicines";
-    const delayDebounceFn = setTimeout(() => {
-      axios.get(`${API_URL}?search=${searchTerm}`)
+    const timer = setTimeout(() => {
+      axios.get<IMedicine[]>(`${API_URL}?search=${searchTerm}`)
         .then((res) => setMedicines(res.data))
-        .catch((err) => console.log("ডাটা লোড করতে সমস্যা:", err));
+        .catch((err) => console.log("Fetch Error:", err));
     }, 300);
-    return () => clearTimeout(delayDebounceFn);
+    return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const handleAddToCart = () => {
-    setCartCount(prev => prev + 1);
-  };
-
   return (
-    <main className="bg-[#F8FAFC] min-h-screen text-black font-sans">
-      <Navbar cartCount={cartCount} />
+    <div className="bg-[#040610] min-h-screen text-slate-300 font-sans selection:bg-blue-600/40 overflow-x-hidden">
+      
+      {/* ─── 1. MARQUEE (নববারের কালো লাইনের সাথে লেগে থাকবে) ─── */}
+      <div className="pt-[10px]"> 
+         <div className="relative w-full z-20 bg-[#070b18] border-b border-white/5 py-3 overflow-hidden whitespace-nowrap flex">
+            <motion.div 
+              animate={{ x: [0, -1200] }}
+              transition={{ repeat: Infinity, duration: 25, ease: "linear" }}
+              className="flex gap-24 items-center pr-24"
+            >
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="flex gap-24 items-center">
+                  <span className="text-[10px] font-black uppercase tracking-[0.5em] text-blue-500 flex items-center gap-3">
+                    <FiActivity className="animate-pulse" /> 100% Original Medicines
+                  </span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.5em] text-white flex items-center gap-3">
+                    <FiPlus className="animate-spin-slow" /> Fast Delivery Across Dhaka
+                  </span>
+                  <span className="text-[10px] font-black uppercase tracking-[0.5em] text-emerald-500 flex items-center gap-3">
+                    <FiShield /> Certified Pharmacy Partner
+                  </span>
+                </div>
+              ))}
+            </motion.div>
+         </div>
+      </div>
 
-      {/* 1. HERO SECTION WITH FIXED IMAGE */}
-      <section className="relative min-h-[650px] flex items-center bg-blue-950 overflow-hidden">
+      {/* ─── 2. HERO SECTION ─── */}
+      <section className="relative min-h-[75vh] flex items-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
-            src="https://images.unsplash.com/photo-1631549916768-4119b2e5f926?q=80&w=2000&auto=format&fit=crop" 
-            alt="Medical Banner" 
-            className="w-full h-full object-cover opacity-40"
+            src="https://images.unsplash.com/photo-1586015555751-63bb77f4322a?q=80&w=2000" 
+            alt="Pharmacy BG" 
+            className="w-full h-full object-cover opacity-100"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-950 via-blue-950/70 to-transparent"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-[#040610] via-[#040610]/80 to-transparent" />
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 relative z-10 w-full">
-          <div className="max-w-2xl">
-            <span className="bg-blue-500 text-white px-5 py-1.5 rounded-full text-[10px] font-black uppercase tracking-[0.3em] mb-8 inline-block shadow-xl shadow-blue-500/30 animate-bounce">
-              Official Pharmacy Partner
-            </span>
+        <div className="relative z-10 max-w-7xl mx-auto px-10 w-full">
+          <motion.div 
+            initial={{ opacity: 0, x: -50 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-left max-w-2xl"
+          >
             <h1 className="text-6xl md:text-8xl font-black leading-[0.9] tracking-tighter mb-8 italic uppercase text-white">
-              Health <br />
-              <span className="text-blue-400">Simplified.</span>
+              HEALTH <br />
+              <span className="text-blue-500">SIMPLIFIED.</span>
             </h1>
-            <p className="text-blue-100 text-xl mb-12 font-medium max-w-lg leading-relaxed border-l-4 border-blue-400 pl-6">
-              আপনার প্রয়োজনীয় সকল ওষুধ এখন এক ক্লিকেই। দ্রুত ডেলিভারি আর বিশ্বস্ততার নাম MediStore।
+            
+            <p className="text-slate-400 text-lg md:text-xl mb-12 font-bold leading-relaxed border-l-4 border-blue-600 pl-6 max-w-lg">
+               আপনার প্রয়োজনীয় সকল ওষুধ এখন এক ক্লিকেই। <br /> 
+               দ্রুত ডেলিভারি আর বিশ্বস্ততার নাম MediStore।
             </p>
+            
             <button 
-              onClick={() => window.scrollTo({top: 900, behavior: 'smooth'})}
-              className="bg-blue-500 hover:bg-white hover:text-blue-600 text-white px-12 py-5 rounded-[2rem] font-black uppercase text-xs flex items-center gap-3 transition-all transform hover:scale-105 shadow-2xl shadow-blue-500/40"
+              onClick={() => medicinesRef.current?.scrollIntoView({ behavior: 'smooth' })}
+              className="bg-blue-600 hover:bg-white hover:text-blue-950 text-white px-10 py-4 rounded-xl font-black uppercase text-[12px] tracking-widest flex items-center gap-4 transition-all group"
             >
-              Start Shopping <FiArrowRight size={18} />
+              EXPLORE STOCK <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
             </button>
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* 2. WHY CHOOSE US (COLOR CARDS) */}
-      <section className="py-24 px-6 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
+      {/* ─── 3. FEATURES SECTION ─── */}
+      <section className="py-20 px-6 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
         {[
-          { icon: <FiTruck size={40}/>, title: "Fast Delivery", desc: "ঢাকার মধ্যে ১২ ঘণ্টায় ডেলিভারি।", color: "bg-blue-600" },
-          { icon: <FiShield size={40}/>, title: "Safe & Secure", desc: "১০০% অরিজিনাল ওষুধের নিশ্চয়তা।", color: "bg-cyan-500" },
-          { icon: <FiPhoneCall size={40}/>, title: "Expert Care", desc: "ফার্মাসিস্টদের সরাসরি পরামর্শ।", color: "bg-indigo-600" }
+          { icon: <FiTruck />, title: "Cash On Delivery", desc: "ঢাকার যেকোনো প্রান্তে দ্রুত ডেলিভারি" },
+          { icon: <FiShield />, title: "100% Original", desc: "সরাসরি অথরাইজড সোর্স থেকে সংগৃহীত" },
+          { icon: <FiPhoneCall />, title: "24/7 Support", desc: "যেকোনো প্রয়োজনে আমাদের কল করুন" }
         ].map((item, i) => (
-          <div key={i} className="p-12 bg-white rounded-[3.5rem] shadow-xl shadow-gray-200/50 hover:-translate-y-4 transition-all duration-500 border border-gray-50 group">
-            <div className={`w-20 h-20 ${item.color} text-white rounded-3xl flex items-center justify-center mb-8 shadow-lg rotate-3 group-hover:rotate-12 transition-transform`}>
-              {item.icon}
-            </div>
-            <h3 className="text-2xl font-black uppercase italic mb-4">{item.title}</h3>
-            <p className="text-gray-400 font-bold text-sm leading-relaxed">{item.desc}</p>
+          <div key={i} className="p-10 bg-[#101726] rounded-[3rem] border border-white/5 text-center group hover:bg-blue-600/5 transition-all">
+             <div className="text-4xl text-blue-500 mb-6 flex justify-center group-hover:scale-110 transition-transform">{item.icon}</div>
+             <h3 className="text-lg font-black uppercase italic text-white mb-2">{item.title}</h3>
+             <p className="text-sm text-slate-500 font-bold">{item.desc}</p>
           </div>
         ))}
       </section>
 
-      {/* 3. MEDICINE LIST (GRID) */}
-      <section className="py-24 px-6 max-w-7xl mx-auto bg-white rounded-[5rem] shadow-sm border border-gray-100 mb-20">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-20 gap-8 px-10">
-          <div>
-            <h2 className="text-5xl font-black uppercase italic tracking-tighter">Our <span className="text-blue-600">Inventory</span></h2>
-            <p className="text-gray-400 text-xs font-black uppercase tracking-widest mt-2">Verified Pharmaceutical Products</p>
-          </div>
-          <input 
-            type="text" 
-            placeholder="Search for medicine..." 
-            className="w-full md:w-96 p-5 rounded-2xl bg-gray-50 border-2 border-gray-100 focus:border-blue-500 outline-none font-bold transition-all shadow-inner"
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+      {/* ─── 4. MEDICINE INVENTORY (WITH NEW BUTTONS) ─── */}
+      <section ref={medicinesRef} className="py-24 px-8 max-w-7xl mx-auto bg-[#0b0f1a] rounded-[4rem] border border-white/5 shadow-2xl">
+        <div className="flex flex-col md:flex-row justify-between items-center mb-16 gap-8">
+            <h2 className="text-4xl font-black uppercase italic tracking-tighter text-white px-4">Medicine <span className="text-blue-500">Stock</span></h2>
+            <div className="relative w-full max-w-md group px-4">
+                <FiSearch className="absolute left-10 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-blue-500 transition-colors" />
+                <input 
+                  type="text" 
+                  placeholder="Search medicines..." 
+                  className="w-full pl-14 pr-6 py-4 rounded-2xl bg-[#101726] border border-white/5 focus:border-blue-600 outline-none font-bold text-white transition-all shadow-inner"
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+            </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 px-6">
-          {medicines.map((medicine) => (
-            <div key={medicine.id} className="bg-gray-50/50 p-8 rounded-[3.5rem] border border-transparent hover:border-blue-100 hover:bg-white hover:shadow-2xl transition-all group">
-              <div className="h-48 bg-white rounded-[3rem] mb-8 flex items-center justify-center text-7xl group-hover:scale-110 transition-transform shadow-inner border border-gray-50">
-                💊
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+          {medicines.map((med, idx) => (
+            <motion.div 
+              key={med.id || idx}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="group bg-[#1c263d]/30 border border-white/5 rounded-[2.5rem] p-6 hover:bg-[#1c263d]/60 transition-all duration-500 flex flex-col h-full"
+            >
+              <div className="h-44 rounded-[1.8rem] bg-black/40 overflow-hidden mb-6 border border-white/5 relative flex-shrink-0">
+                 <img 
+                    src={med.image || medicineImages[idx % medicineImages.length]} 
+                    className="w-full h-full object-cover opacity-90 group-hover:scale-110 transition-all duration-700" 
+                    alt={med.name} 
+                 />
               </div>
-              <h3 className="text-2xl font-black text-gray-900 tracking-tight mb-2">{medicine.name}</h3>
-              <p className="text-blue-500 text-xs font-black uppercase tracking-[0.2em] mb-8">{medicine.manufacturer}</p>
-              
-              <div className="flex justify-between items-center pt-8 border-t border-dashed border-gray-200">
-                <div>
-                  <span className="text-gray-400 text-[10px] font-black uppercase block">Price</span>
-                  <p className="text-3xl font-black text-gray-900">৳{medicine.price}</p>
-                </div>
-                <div className="flex gap-3">
-                  <button onClick={handleAddToCart} className="p-5 bg-black text-white rounded-2xl hover:bg-blue-600 transition-all shadow-lg">
-                    <FiPlusSquare size={22} />
-                  </button>
-                  <button onClick={() => setSelectedMedicine(medicine)} className="px-8 py-5 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl">
-                    View
-                  </button>
-                </div>
+
+              <div className="px-1 flex-grow">
+                <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest mb-1">{med.manufacturer}</p>
+                <h3 className="text-lg font-black italic text-white mb-2 truncate group-hover:text-blue-400 transition-colors">{med.name}</h3>
+                <p className="text-2xl font-black text-white italic tracking-tighter mb-6">৳{med.price}</p>
               </div>
-            </div>
+                
+              {/* ✅ NEW BUTTONS SECTION */}
+              <div className="grid grid-cols-2 gap-3 mt-auto border-t border-white/5 pt-6">
+                <button className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-white text-white hover:text-blue-950 py-3 rounded-xl transition-all shadow-lg active:scale-95 group/btn">
+                  <FiShoppingCart className="text-sm" />
+                  <span className="text-[9px] font-black uppercase tracking-tighter">Add to Cart</span>
+                </button>
+                <button className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white py-3 rounded-xl border border-white/5 transition-all active:scale-95">
+                  <FiEye className="text-sm" />
+                  <span className="text-[9px] font-black uppercase tracking-tighter">View Details</span>
+                </button>
+              </div>
+            </motion.div>
           ))}
         </div>
       </section>
 
-      {/* 4. MASSIVE FOOTER SECTION */}
-      <footer className="bg-[#0F172A] text-white pt-32 pb-12 rounded-t-[6rem] px-8 md:px-20 relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-20 opacity-5">
-            <FiActivity size={400} />
+      {/* ─── 5. REVIEWS ─── */}
+      <section className="py-24 px-6 max-w-7xl mx-auto mb-20">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+          {[
+            { name: "Alfaz ARbby", text: "অর্ডার করার পর খুব দ্রুত ওষুধ পেয়েছি। প্যাকেজিং সত্যিই প্রশংসনীয়!" },
+            { name: "Sifat Rahman", text: "সব প্রয়োজনীয় মেডিসিন সহজেই পাওয়া যায়। ইন্টারফেসটা খুব চমৎকার।" }
+          ].map((item, i) => (
+            <div key={i} className="bg-[#101726] p-12 rounded-[3.5rem] border border-white/5">
+               <p className="text-lg text-slate-400 font-bold italic leading-relaxed mb-8 border-l-2 border-blue-600 pl-6">
+                 &ldquo;{item.text}&rdquo;
+               </p>
+               <div className="flex items-center gap-4">
+                 <div className="w-12 h-12 bg-blue-600 rounded-2xl flex items-center justify-center font-black text-white text-xl italic shadow-lg">A</div>
+                 <h4 className="font-black uppercase text-[10px] tracking-widest text-white">{item.name}</h4>
+               </div>
+            </div>
+          ))}
         </div>
-
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-16 mb-24">
-            <div className="md:col-span-1">
-              <h2 className="text-4xl font-black uppercase italic tracking-tighter mb-8 text-white">
-                Medi<span className="text-blue-500">Store</span>
-              </h2>
-              <p className="text-gray-400 font-bold text-sm leading-relaxed mb-10">
-                আপনার বিশ্বস্ত অনলাইন ফার্মেসি। আমরা আপনার সুস্বাস্থ্য নিশ্চিতে সবসময় কাজ করে যাচ্ছি।
-              </p>
-              <div className="flex gap-4">
-                <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center hover:bg-blue-600 transition-all cursor-pointer border border-white/10 text-blue-400 hover:text-white">
-                  <FiFacebook size={20}/>
-                </div>
-                <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center hover:bg-blue-600 transition-all cursor-pointer border border-white/10 text-blue-400 hover:text-white">
-                  <FiInstagram size={20}/>
-                </div>
-                <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center hover:bg-blue-600 transition-all cursor-pointer border border-white/10 text-blue-400 hover:text-white">
-                  <FiTwitter size={20}/>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="text-xs font-black uppercase tracking-[0.3em] mb-10 text-blue-500">Shop Links</h4>
-              <ul className="space-y-5 text-gray-400 font-bold text-sm">
-                <li><Link href="/medicines" className="hover:text-blue-400 transition-colors">All Medicines</Link></li>
-                <li><Link href="/categories" className="hover:text-blue-400 transition-colors">Categories</Link></li>
-                <li><Link href="/new-arrivals" className="hover:text-blue-400 transition-colors">New Arrivals</Link></li>
-                <li><Link href="/offers" className="hover:text-blue-400 transition-colors">Special Offers</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-xs font-black uppercase tracking-[0.3em] mb-10 text-blue-500">Support</h4>
-              <ul className="space-y-5 text-gray-400 font-bold text-sm">
-                <li><Link href="/faq" className="hover:text-blue-400 transition-colors">FAQ</Link></li>
-                <li><Link href="/returns" className="hover:text-blue-400 transition-colors">Return Policy</Link></li>
-                <li><Link href="/terms" className="hover:text-blue-400 transition-colors">Terms of Service</Link></li>
-                <li><Link href="/privacy" className="hover:text-blue-400 transition-colors">Privacy Policy</Link></li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-xs font-black uppercase tracking-[0.3em] mb-10 text-blue-500">Connect</h4>
-              <ul className="space-y-5 text-gray-400 font-bold text-sm">
-                <li className="flex items-center gap-4"><FiMail className="text-blue-500"/> contact@medistore.com</li>
-                <li className="flex items-center gap-4"><FiPhoneCall className="text-blue-500"/> +880 1700-000000</li>
-                <li className="flex items-center gap-4"><FiMapPin className="text-blue-500"/> Gulshan, Dhaka, BD</li>
-                <li className="flex items-center gap-4"><FiClock className="text-blue-500"/> 24/7 Support</li>
-              </ul>
-            </div>
-          </div>
-
-          <div className="pt-12 border-t border-white/5 flex flex-col md:row justify-between items-center gap-8">
-            <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.4em]">© 2026 MEDISTORE PHARMACY. ALL RIGHTS RESERVED.</p>
-            <div className="flex gap-12">
-               <img src="https://i.ibb.co/v3m9XyK/payment-methods.png" alt="Payments" className="h-6 grayscale opacity-30 hover:opacity-100 transition-opacity" />
-            </div>
-          </div>
-        </div>
-      </footer>
-
-      <MedicineModal 
-        medicine={selectedMedicine} 
-        onClose={() => setSelectedMedicine(null)} 
-      />
-    </main>
+      </section>
+    </div>
   );
 }

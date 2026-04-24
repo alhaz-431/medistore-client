@@ -14,7 +14,6 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // এখানে আপনার দেওয়া আসল লিঙ্কটি বসিয়ে দিয়েছি
       const res = await fetch("https://medistore-backend-server.vercel.app/api/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -23,22 +22,24 @@ export default function LoginPage() {
 
       const data = await res.json();
 
+      // --- এই অংশটুকু পরিবর্তন করুন ---
       if (res.ok) {
-        // ১. টোকেন ও ইউজার ডাটা ব্রাউজারে সেভ করা
+        // ১. টোকেন ও ইউজার ডাটা সেভ করা
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
 
         alert("লগইন সফল হয়েছে! 🚀");
         
-        // ২. সরাসরি হোম পেজে পাঠিয়ে দেওয়া
-        router.push("/");
-        router.refresh(); 
+        // ২. সরাসরি হোম পেজে পাঠিয়ে পেজ রিফ্রেশ করা (যেন Navbar আপডেট হয়)
+        window.location.href = "/"; 
       } else {
         alert(data.error || "লগইন ব্যর্থ হয়েছে!");
       }
+      // -------------------------------
+
     } catch (error) {
       console.error("Login error:", error);
-      alert("সার্ভারে কানেক্ট করা যাচ্ছে না! আপনার ইন্টারনেট বা ব্যাকএন্ড চেক করুন।");
+      alert("সার্ভারে কানেক্ট করা যাচ্ছে না!");
     } finally {
       setLoading(false);
     }

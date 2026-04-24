@@ -1,10 +1,18 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
-import { LayoutDashboard, PlusCircle, Package, ShoppingBag, LogOut, LucideIcon } from "lucide-react";
+import { 
+  LayoutDashboard, 
+  PlusCircle, 
+  Package, 
+  ShoppingBag, 
+  LogOut, 
+  Users,
+  Settings,
+  LucideIcon 
+} from "lucide-react";
 
-// ১. টাইপগুলো ঠিক করা হলো
 interface User {
   id: string;
   name: string;
@@ -19,26 +27,29 @@ interface MenuItemProps {
   isActive: boolean;
 }
 
+// 🔵 ছোট মেনু আইটেম কম্পোনেন্ট (Dark Theme Style)
 const MenuItem = ({ href, icon: Icon, label, isActive }: MenuItemProps) => (
   <Link 
     href={href} 
-    className={`flex items-center gap-3 p-3 rounded-xl transition-all ${
-      isActive ? "bg-blue-600 text-white shadow-md" : "text-gray-600 hover:bg-blue-50 hover:text-blue-700"
+    className={`flex items-center gap-3 px-4 py-3 rounded-2xl font-bold transition-all duration-300 ${
+      isActive 
+        ? "bg-blue-600 text-white shadow-lg shadow-blue-900/40 translate-x-1" 
+        : "text-slate-400 hover:bg-slate-800 hover:text-white"
     }`}
   >
-    <Icon size={18} />
-    <span className="font-medium text-sm">{label}</span>
+    <Icon size={20} />
+    <span className="text-sm tracking-wide">{label}</span>
   </Link>
 );
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  
   const [user, setUser] = useState<User | null>(null);
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-useEffect(() => {
-    const checkUser = () => {
+
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
       const storedUser = localStorage.getItem("user");
       
       if (!storedUser) {
@@ -48,41 +59,36 @@ useEffect(() => {
 
       try {
         const parsedUser: User = JSON.parse(storedUser);
-        setUser((prev) => {
-          if (JSON.stringify(prev) !== JSON.stringify(parsedUser)) {
-            return parsedUser;
-          }
-          return prev;
-        });
+        setUser(parsedUser);
       } catch (error) {
-        console.error("User parsing error:", error);
         router.push("/login");
       }
-    };
-
-    checkUser();
-
-   
-    const timeoutId = setTimeout(() => {
       setMounted(true);
     }, 0);
 
-    return () => clearTimeout(timeoutId); // ক্লিনআপ
+    return () => clearTimeout(timeoutId);
   }, [router]);
 
-  // মাউন্ট হওয়ার আগে কিছু রেন্ডার হবে না (Hydration Fix)
-  if (!mounted) {
-    return <div className="p-10 text-center font-bold">প্রবেশ করা হচ্ছে...</div>;
+  if (!mounted || !user) {
+    return <div className="h-screen flex items-center justify-center bg-[#0f172a] text-white font-black uppercase tracking-widest animate-pulse italic">Entering MediStore Portal...</div>;
   }
 
-  // ইউজার না থাকলে কিছুই দেখাবে না (রিডাইরেক্ট হওয়া পর্যন্ত অপেক্ষা করবে)
-  if (!user) return null;
-
   return (
-    <div className="flex min-h-[calc(100vh-64px)] bg-slate-50">
-      <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col p-6 sticky top-16 h-[calc(100vh-64px)]">
-        <nav className="flex-1 space-y-2">
-          <p className="text-[10px] uppercase font-bold text-gray-400 ml-3 mb-4 tracking-widest">Dashboard Menu</p>
+    <div className="flex min-h-screen bg-[#f8fafc]">
+      
+      {/* 🟦 Sidebar: Deep Navy Blue Theme */}
+      <aside className="w-72 bg-[#0f172a] text-slate-300 hidden md:flex flex-col border-r border-slate-800 shadow-2xl sticky top-0 h-screen">
+        
+        {/* Logo Section */}
+        <div className="p-8 border-b border-slate-800/50">
+          <Link href="/" className="text-2xl font-black tracking-tighter text-white italic uppercase">
+            MEDI<span className="text-blue-500">STORE</span> 💊
+          </Link>
+        </div>
+
+        {/* Navigation Menu */}
+        <nav className="flex-1 p-6 space-y-2 overflow-y-auto custom-scrollbar">
+          <div className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 mb-4 px-2">Main Menu</div>
           
           <MenuItem 
             href="/dashboard" 
@@ -91,6 +97,7 @@ useEffect(() => {
             isActive={pathname === "/dashboard"} 
           />
 
+          {/* সেলার মেনু */}
           {user.role === "SELLER" && (
             <>
               <MenuItem 
@@ -108,23 +115,55 @@ useEffect(() => {
             </>
           )}
 
+          {/* অ্যাডমিন মেনু */}
+          {user.role === "ADMIN" && (
+            <>
+              <MenuItem 
+                href="/dashboard/manage-users" 
+                icon={Users} 
+                label="Manage Users" 
+                isActive={pathname === "/dashboard/manage-users"} 
+              />
+              <MenuItem 
+                href="/dashboard/all-inventory" 
+                icon={Package} 
+                label="All Inventory" 
+                isActive={pathname === "/dashboard/all-inventory"} 
+              />
+            </>
+          )}
+
           <MenuItem 
             href="/dashboard/my-orders" 
             icon={ShoppingBag} 
-            label="Orders" 
+            label="Order History" 
             isActive={pathname === "/dashboard/my-orders"} 
           />
         </nav>
 
-        <button 
-          onClick={() => { localStorage.clear(); window.location.href = "/login"; }}
-          className="mt-auto flex items-center gap-3 p-3 text-red-500 font-bold hover:bg-red-50 rounded-xl transition"
-        >
-          <LogOut size={18} /> Logout
-        </button>
+        {/* Bottom Section: User & Logout */}
+        <div className="p-6 border-t border-slate-800/50 space-y-4">
+          <div className="flex items-center gap-3 px-2">
+            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-black italic">
+              {user.name.charAt(0)}
+            </div>
+            <div className="overflow-hidden">
+              <p className="text-sm font-bold text-white truncate">{user.name}</p>
+              <p className="text-[10px] text-slate-500 font-bold uppercase">{user.role}</p>
+            </div>
+          </div>
+
+          <button 
+            onClick={() => { localStorage.clear(); window.location.href = "/login"; }}
+            className="w-full flex items-center gap-3 px-4 py-3 text-red-400 font-bold hover:bg-red-500/10 rounded-2xl transition-all"
+          >
+            <LogOut size={20} /> <span className="text-sm">Logout</span>
+          </button>
+        </div>
       </aside>
 
-      <main className="flex-1 p-8">
+      {/* ⬜ Main Content Area */}
+      <main className="flex-1 p-6 md:p-10 overflow-y-auto">
         {children}
       </main>
     </div>

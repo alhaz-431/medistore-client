@@ -7,7 +7,6 @@ import { FiUser, FiMail, FiLock, FiShield, FiArrowRight } from "react-icons/fi";
 // ব্যাকএন্ড ইউআরএল
 const API_URL = "https://medistore-backend-server.vercel.app/api";
 
-// এরর রেসপন্সের জন্য ইন্টারফেস
 interface IErrorResponse {
   message?: string;
   error?: string;
@@ -28,8 +27,8 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      // আপনার ব্যাকএন্ডে যদি /auth/register না থাকে তবে শুধু /register ব্যবহার করুন
-      const response = await axios.post(`${API_URL}/auth/register`, formData);
+      // ফিক্স: এখানে /auth/register এর বদলে শুধু /register হবে
+      const response = await axios.post(`${API_URL}/register`, formData);
       
       if (response.status === 201 || response.status === 200) {
         alert("অভিনন্দন! রেজিস্ট্রেশন সফল হয়েছে। 🎉");
@@ -39,10 +38,13 @@ export default function RegisterPage() {
       let errorMessage = "রেজিস্ট্রেশন ব্যর্থ হয়েছে!";
       
       if (axios.isAxiosError(err)) {
-        // টাইপ সেফ এরর হ্যান্ডলিং
-        const serverError = err.response?.data as IErrorResponse;
-        errorMessage = serverError?.message || serverError?.error || "সার্ভার এরর! পুনরায় চেষ্টা করুন।";
-        console.error("Registration Error Details:", serverError);
+        // যদি সার্ভার থেকে HTML এরর আসে (যেমন ৪-৪), তবে এটা হ্যান্ডেল করবে
+        if (typeof err.response?.data === 'string' && err.response.data.includes('<!DOCTYPE html>')) {
+          errorMessage = "ভুল API লিঙ্ক! ব্যাকএন্ড রাউট চেক করুন।";
+        } else {
+          const serverError = err.response?.data as IErrorResponse;
+          errorMessage = serverError?.message || serverError?.error || "সার্ভার এরর! পুনরায় চেষ্টা করুন।";
+        }
       } else if (err instanceof Error) {
         errorMessage = err.message;
       }
@@ -57,7 +59,6 @@ export default function RegisterPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 text-black">
       <div className="max-w-md w-full bg-white rounded-[3rem] shadow-2xl p-8 md:p-12 border border-gray-100">
         
-        {/* লোগো ও হেডার */}
         <div className="text-center mb-10">
           <div className="inline-flex p-4 bg-blue-50 rounded-2xl text-blue-600 mb-4">
             <FiShield size={32} />
@@ -69,27 +70,26 @@ export default function RegisterPage() {
         </div>
 
         <form onSubmit={handleRegister} className="space-y-4">
-          {/* নাম ইনপুট */}
           <div className="relative group">
             <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
             <input 
               type="text" placeholder="Full Name" 
               className="w-full pl-12 pr-4 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-blue-500 focus:bg-white outline-none font-bold transition-all" 
-              onChange={(e) => setFormData({...formData, name: e.target.value})} required 
+              onChange={(e) => setFormData({...formData, name: e.target.value})} 
+              required // ৫ নম্বর পয়েন্টের জন্য ম্যান্ডেটরি
             />
           </div>
 
-          {/* ইমেইল ইনপুট */}
           <div className="relative group">
             <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
             <input 
               type="email" placeholder="Email Address" 
               className="w-full pl-12 pr-4 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-blue-500 focus:bg-white outline-none font-bold transition-all" 
-              onChange={(e) => setFormData({...formData, email: e.target.value})} required 
+              onChange={(e) => setFormData({...formData, email: e.target.value})} 
+              required // ৫ নম্বর পয়েন্টের জন্য ম্যান্ডেটরি
             />
           </div>
 
-          {/* রোল সিলেক্ট */}
           <div className="relative">
             <select 
               value={formData.role} 
@@ -101,17 +101,16 @@ export default function RegisterPage() {
             </select>
           </div>
 
-          {/* পাসওয়ার্ড ইনপুট */}
           <div className="relative group">
             <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors" />
             <input 
               type="password" placeholder="Password" 
               className="w-full pl-12 pr-4 py-4 rounded-2xl bg-gray-50 border-2 border-transparent focus:border-blue-500 focus:bg-white outline-none font-bold transition-all" 
-              onChange={(e) => setFormData({...formData, password: e.target.value})} required 
+              onChange={(e) => setFormData({...formData, password: e.target.value})} 
+              required // ৫ নম্বর পয়েন্টের জন্য ম্যান্ডেটরি
             />
           </div>
 
-          {/* সাবমিট বাটন */}
           <button 
             type="submit" disabled={loading}
             className={`w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-lg ${
