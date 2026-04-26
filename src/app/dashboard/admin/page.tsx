@@ -1,19 +1,16 @@
 "use client";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { motion, AnimatePresence } from "framer-motion";
 import { 
-  FiDollarSign, 
-  FiShoppingBag, 
-  FiUsers, 
-  FiAlertTriangle, 
-  FiActivity,
-  FiRefreshCcw
+  FiDollarSign, FiShoppingBag, FiUsers, FiAlertTriangle, 
+  FiActivity, FiRefreshCcw, FiPieChart, FiArrowUpRight,
+  FiTruck, FiCheckCircle, FiXCircle, FiClock
 } from "react-icons/fi";
 
-// ব্যাকএন্ড ইউআরএল
-const API_URL = "https://medistore-backend-server.vercel.app/api";
+// ব্যাকএন্ড ইউআরএল (Environment Variable থেকে নিলে ভালো হয়)
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://medistore-backend-server.vercel.app/api";
 
-// ইন্টারফেসগুলো ডিফাইন করা (Type Safety এর জন্য)
 interface IStats {
   totalRevenue: number;
   totalOrders: number;
@@ -27,14 +24,7 @@ interface IOrder {
   totalAmount: number;
   status: string;
   user: { name: string; email: string };
-}
-
-interface IStatCardProps {
-  icon: React.ReactNode;
-  label: string;
-  value: string | number;
-  color: "green" | "blue" | "purple" | "red";
-  alert?: boolean;
+  createdAt: string;
 }
 
 export default function AdminDashboard() {
@@ -81,95 +71,175 @@ export default function AdminDashboard() {
   };
 
   if (loading) return (
-    <div className="flex justify-center items-center min-h-[60vh] text-blue-600 font-black animate-pulse">
-      LOADING ADMIN DATA... 💊
+    <div className="flex flex-col justify-center items-center min-h-screen bg-[#fafbfc]">
+      <FiActivity className="text-5xl text-blue-600 animate-spin mb-4" />
+      <span className="text-blue-600 font-black tracking-[0.3em] uppercase text-xs">Syncing MediStore Data...</span>
     </div>
   );
 
   return (
-    <div className="p-6 md:p-10 bg-gray-50 min-h-screen text-black font-sans">
-      <div className="mb-10 flex justify-between items-center">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="p-6 md:p-10 bg-[#fafbfc] min-h-screen text-black font-sans"
+    >
+      {/* ─── HEADER SECTION ─── */}
+      <div className="mb-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-black uppercase tracking-tight flex items-center gap-3 italic">
-            <FiActivity className="text-blue-600" /> Admin <span className="text-blue-600">Overview</span>
+          <h1 className="text-4xl font-black uppercase tracking-tighter flex items-center gap-3 italic text-[#040610]">
+            Control <span className="text-blue-600">Center</span>
           </h1>
-          <p className="text-gray-400 font-bold text-[10px] uppercase tracking-[0.3em] mt-1">Management Portal</p>
+          <p className="text-gray-400 font-bold text-[10px] uppercase tracking-[0.4em] mt-1">
+            System Administrator • Real-time Monitoring
+          </p>
         </div>
-        <button onClick={fetchData} className="p-3 bg-white border border-gray-100 rounded-2xl hover:bg-blue-50 text-blue-600 transition-all shadow-sm">
-          <FiRefreshCcw />
-        </button>
+        <div className="flex gap-3">
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={fetchData} 
+            className="p-4 bg-white border border-gray-100 rounded-2xl hover:bg-blue-50 text-blue-600 transition-all shadow-sm flex items-center gap-2 font-black text-[10px] uppercase tracking-widest"
+          >
+            <FiRefreshCcw className={loading ? "animate-spin" : ""} /> Refresh
+          </motion.button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        <StatCard icon={<FiDollarSign/>} label="Revenue" value={`৳ ${stats?.totalRevenue.toLocaleString()}`} color="green" />
-        <StatCard icon={<FiShoppingBag/>} label="Orders" value={stats?.totalOrders || 0} color="blue" />
-        <StatCard icon={<FiUsers/>} label="Users" value={stats?.totalUsers || 0} color="purple" />
+      {/* ─── STATS GRID ─── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <StatCard icon={<FiDollarSign/>} label="Total Revenue" value={`৳${stats?.totalRevenue.toLocaleString()}`} color="green" trend="+12.5%" />
+        <StatCard icon={<FiShoppingBag/>} label="Active Orders" value={stats?.totalOrders || 0} color="blue" trend="+5.2%" />
+        <StatCard icon={<FiUsers/>} label="Total Users" value={stats?.totalUsers || 0} color="purple" trend="+2.1%" />
         <StatCard icon={<FiAlertTriangle/>} label="Low Stock" value={stats?.lowStockCount || 0} color="red" alert={!!(stats?.lowStockCount && stats.lowStockCount > 0)} />
       </div>
 
-      <div className="bg-white rounded-[2.5rem] p-8 border border-gray-100 shadow-sm">
-        <h3 className="text-xl font-black mb-6 uppercase tracking-tighter italic">Recent <span className="text-blue-600">Orders Management</span></h3>
+      {/* ─── ORDERS TABLE ─── */}
+      <div className="bg-white rounded-[3rem] p-10 border border-gray-100 shadow-xl shadow-blue-900/5 relative overflow-hidden">
+        <div className="flex justify-between items-center mb-10">
+          <h3 className="text-2xl font-black uppercase tracking-tighter italic">
+            Order <span className="text-blue-600">Pipeline</span>
+          </h3>
+          <span className="text-[10px] font-black bg-blue-50 text-blue-600 px-4 py-2 rounded-full uppercase tracking-widest">
+            {orders.length} Total Transactions
+          </span>
+        </div>
+
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b border-gray-50">
-                <th className="pb-4">Order ID</th>
-                <th className="pb-4">Customer</th>
-                <th className="pb-4">Status</th>
-                <th className="pb-4 text-right">Action</th>
+              <tr className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] border-b border-gray-50">
+                <th className="pb-6">Reference</th>
+                <th className="pb-6">Customer Profile</th>
+                <th className="pb-6">Amount</th>
+                <th className="pb-6">Current Status</th>
+                <th className="pb-6 text-right">Management</th>
               </tr>
             </thead>
             <tbody className="text-sm font-bold">
-              {orders.slice(0, 5).map((order) => (
-                <tr key={order.id} className="border-b border-gray-50 hover:bg-gray-50/50 transition-all">
-                  <td className="py-5 text-blue-600 font-black uppercase">#{order.id.slice(-6)}</td>
-                  <td className="py-5">
-                    <p className="text-gray-900 leading-none">{order.user?.name}</p>
-                    <p className="text-[10px] text-gray-400 mt-1 font-medium">{order.user?.email}</p>
+              {orders.map((order) => (
+                <motion.tr 
+                  layout
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  key={order.id} 
+                  className="border-b border-gray-50 group hover:bg-blue-50/30 transition-all"
+                >
+                  <td className="py-7 text-blue-600 font-black uppercase tracking-tighter">
+                    #{order.id.slice(-8)}
                   </td>
-                  <td className="py-5 text-[9px] font-black uppercase text-gray-600">
-                    <span className="px-3 py-1 bg-gray-100 rounded-full">{order.status}</span>
+                  <td className="py-7">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gray-100 rounded-xl flex items-center justify-center font-black text-gray-500">
+                        {order.user?.name[0]}
+                      </div>
+                      <div>
+                        <p className="text-gray-900 font-black leading-none uppercase italic text-xs">{order.user?.name}</p>
+                        <p className="text-[10px] text-gray-400 mt-1 font-bold">{order.user?.email}</p>
+                      </div>
+                    </div>
                   </td>
-                  <td className="py-5 text-right">
+                  <td className="py-7 font-black text-gray-900 italic text-lg">৳{order.totalAmount}</td>
+                  <td className="py-7">
+                    <StatusBadge status={order.status} />
+                  </td>
+                  <td className="py-7 text-right">
                     <select 
                       onChange={(e) => handleUpdateStatus(order.id, e.target.value)}
-                      className="bg-gray-50 border-none rounded-xl px-3 py-2 text-[10px] font-black cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none text-black transition-all"
+                      className="bg-white border-2 border-gray-100 rounded-2xl px-4 py-3 text-[10px] font-black cursor-pointer focus:border-blue-600 outline-none text-black transition-all shadow-sm hover:border-blue-300"
                     >
-                      <option value="">CHANGE</option>
+                      <option value="">CHANGE STATUS</option>
                       <option value="PENDING">PENDING</option>
                       <option value="SHIPPED">SHIPPED</option>
                       <option value="DELIVERED">DELIVERED</option>
                       <option value="CANCELLED">CANCELLED</option>
                     </select>
                   </td>
-                </tr>
+                </motion.tr>
               ))}
             </tbody>
           </table>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
-function StatCard({ icon, label, value, color, alert }: IStatCardProps) {
-  const colorStyles: Record<string, string> = {
-    green: "bg-green-50 text-green-600 group-hover:bg-green-600",
-    blue: "bg-blue-50 text-blue-600 group-hover:bg-blue-600",
-    purple: "bg-purple-50 text-purple-600 group-hover:bg-purple-600",
-    red: "bg-red-50 text-red-600 group-hover:bg-red-600"
+// ─── HELPER COMPONENTS ───
+
+function StatCard({ icon, label, value, color, alert, trend }: any) {
+  const colorStyles: any = {
+    green: "bg-green-50 text-green-600",
+    blue: "bg-blue-50 text-blue-600",
+    purple: "bg-purple-50 text-purple-600",
+    red: "bg-red-50 text-red-600"
   };
 
   return (
-    <div className="bg-white p-6 rounded-[2rem] border border-gray-100 shadow-sm hover:shadow-2xl transition-all group cursor-default">
-      <div className="flex justify-between items-start mb-4">
-        <div className={`p-4 rounded-2xl transition-all group-hover:text-white ${colorStyles[color]}`}>
+    <motion.div 
+      whileHover={{ y: -10 }}
+      className="bg-white p-8 rounded-[2.5rem] border border-gray-100 shadow-sm transition-all relative overflow-hidden group"
+    >
+      <div className="flex justify-between items-start mb-6">
+        <div className={`p-5 rounded-[1.5rem] text-2xl transition-all group-hover:scale-110 ${colorStyles[color]}`}>
           {icon}
         </div>
-        {alert && <span className="text-[9px] font-black text-red-500 bg-red-50 px-2 py-1 rounded-full uppercase animate-pulse">Critical</span>}
+        {trend && (
+          <div className="flex items-center gap-1 text-[10px] font-black text-green-500 bg-green-50 px-3 py-1 rounded-full italic">
+            <FiArrowUpRight /> {trend}
+          </div>
+        )}
       </div>
-      <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest">{label}</p>
-      <h2 className={`text-3xl font-black mt-1 ${alert ? 'text-red-600' : 'text-gray-900'}`}>{value}</h2>
-    </div>
+      <p className="text-gray-400 text-[10px] font-black uppercase tracking-widest leading-none mb-2">{label}</p>
+      <h2 className={`text-4xl font-black italic tracking-tighter ${alert ? 'text-red-600' : 'text-[#040610]'}`}>
+        {value}
+      </h2>
+      {alert && (
+        <div className="absolute top-4 right-4 animate-pulse">
+          <span className="bg-red-500 text-white text-[8px] font-black px-2 py-1 rounded-md uppercase">Action Required</span>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const styles: any = {
+    PENDING: "bg-yellow-50 text-yellow-600 border-yellow-100",
+    SHIPPED: "bg-blue-50 text-blue-600 border-blue-100",
+    DELIVERED: "bg-green-50 text-green-600 border-green-100",
+    CANCELLED: "bg-red-50 text-red-600 border-red-100",
+  };
+
+  const icons: any = {
+    PENDING: <FiClock />,
+    SHIPPED: <FiTruck />,
+    DELIVERED: <FiCheckCircle />,
+    CANCELLED: <FiXCircle />,
+  };
+
+  return (
+    <span className={`flex items-center gap-2 w-fit px-4 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest ${styles[status] || styles.PENDING}`}>
+      {icons[status] || <FiClock />} {status}
+    </span>
   );
 }
