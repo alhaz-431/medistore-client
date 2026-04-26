@@ -33,17 +33,21 @@ export default function CheckoutPage() {
 
   const handleOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // ✅ উন্নত ভ্যালিডেশন
     if (cartItems.length === 0) return alert("আপনার কার্ট খালি!");
+    if (shippingInfo.phone.length < 11) return alert("সঠিক মোবাইল নম্বর দিন (কমপক্ষে ১১ ডিজিট)");
+    if (shippingInfo.address.length < 10) return alert("দয়া করে বিস্তারিত ঠিকানা দিন");
 
     setLoading(true);
     try {
       const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
-      const userId = savedUser.id; 
+      const userId = savedUser.id;
 
-      if(!userId) {
-          alert("অর্ডার করতে লগইন থাকা আবশ্যক!");
-          router.push("/login");
-          return;
+      if (!userId) {
+        alert("অর্ডার করতে লগইন থাকা আবশ্যক!");
+        router.push("/login");
+        return;
       }
 
       const orderData = {
@@ -58,17 +62,16 @@ export default function CheckoutPage() {
         totalAmount: totalAmount,
       };
 
-      // আপনার প্রোডাকশন API এন্ডপয়েন্ট
       const res = await axios.post("https://medistore-backend-server.vercel.app/api/orders", orderData);
 
       if (res.status === 201 || res.status === 200) {
         localStorage.removeItem("cart");
-        window.dispatchEvent(new Event("cartUpdated"));
+        window.dispatchEvent(new Event("cartUpdated")); // নেভবার আপডেট করার জন্য
         router.push("/dashboard/my-orders");
       }
     } catch (error) {
       console.error("Order Error:", error);
-      alert("অর্ডার প্রসেস করা সম্ভব হয়নি। আপনার নেটওয়ার্ক বা সার্ভার চেক করুন।");
+      alert("অর্ডার প্রসেস করা সম্ভব হয়নি। আপনার নেটওয়ার্ক বা সার্ভার চেক করুন।");
     } finally {
       setLoading(false);
     }
@@ -115,6 +118,7 @@ export default function CheckoutPage() {
                 </label>
                 <input
                   type="text"
+                  value={shippingInfo.name}
                   placeholder="e.g. Ariful Islam"
                   required
                   className="w-full bg-gray-50/50 border border-gray-100 p-5 rounded-2xl outline-none focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all font-bold text-gray-700"
@@ -128,6 +132,7 @@ export default function CheckoutPage() {
                 </label>
                 <input
                   type="tel"
+                  value={shippingInfo.phone}
                   placeholder="017XXXXXXXX"
                   required
                   className="w-full bg-gray-50/50 border border-gray-100 p-5 rounded-2xl outline-none focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all font-bold text-gray-700"
@@ -140,6 +145,7 @@ export default function CheckoutPage() {
                   <FiMapPin /> Delivery Address
                 </label>
                 <textarea
+                  value={shippingInfo.address}
                   placeholder="House No, Road, Area..."
                   required
                   className="w-full bg-gray-50/50 border border-gray-100 p-5 rounded-2xl outline-none focus:bg-white focus:ring-4 focus:ring-blue-100 focus:border-blue-400 transition-all font-bold text-gray-700 min-h-[120px] resize-none"
@@ -150,7 +156,7 @@ export default function CheckoutPage() {
               <button
                 type="submit"
                 disabled={loading || cartItems.length === 0}
-                className="w-full bg-[#040610] text-white py-6 rounded-[2rem] font-black uppercase text-xs tracking-[0.3em] flex items-center justify-center gap-4 hover:bg-blue-600 transition-all active:scale-95 shadow-2xl shadow-blue-900/20 disabled:bg-gray-200 disabled:text-gray-400"
+                className="w-full bg-[#040610] text-white py-6 rounded-[2rem] font-black uppercase text-xs tracking-[0.3em] flex items-center justify-center gap-4 hover:bg-blue-600 transition-all active:scale-95 shadow-2xl shadow-blue-900/20 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed"
               >
                 {loading ? <FiLoader className="animate-spin" size={20} /> : <><FiCheckCircle size={20}/> Complete Order</>}
               </button>
@@ -164,9 +170,9 @@ export default function CheckoutPage() {
             className="lg:col-span-5 space-y-6 lg:sticky lg:top-10"
           >
             <div className="bg-[#040610] text-white p-10 rounded-[3.5rem] shadow-2xl relative overflow-hidden">
-               <h3 className="text-xl font-black uppercase italic tracking-tighter mb-8 relative z-10">Order Summary</h3>
-               
-               <div className="space-y-4 mb-8 max-h-[300px] overflow-y-auto custom-scrollbar pr-2 relative z-10">
+                <h3 className="text-xl font-black uppercase italic tracking-tighter mb-8 relative z-10">Order Summary</h3>
+                
+                <div className="space-y-4 mb-8 max-h-[300px] overflow-y-auto custom-scrollbar pr-2 relative z-10">
                   {cartItems.map((item) => (
                     <div key={item.id} className="flex justify-between items-center bg-white/5 backdrop-blur-sm p-5 rounded-2xl border border-white/5">
                       <div>
@@ -176,25 +182,24 @@ export default function CheckoutPage() {
                       <span className="font-black text-blue-400 italic">৳{item.price * item.quantity}</span>
                     </div>
                   ))}
-               </div>
+                </div>
 
-               <div className="border-t border-white/10 pt-6 relative z-10">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em]">Subtotal Bill</span>
-                    <span className="font-bold text-gray-300">৳{totalAmount}</span>
-                  </div>
-                  <div className="flex justify-between items-center mb-6">
-                    <span className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em]">Delivery Fee</span>
-                    <span className="text-emerald-500 font-black text-xs uppercase italic">Free</span>
-                  </div>
-                  <div className="flex justify-between items-center text-3xl font-black italic tracking-tighter">
-                    <span>Total</span>
-                    <span className="text-blue-500">৳{totalAmount}</span>
-                  </div>
-               </div>
+                <div className="border-t border-white/10 pt-6 relative z-10">
+                   <div className="flex justify-between items-center mb-2">
+                     <span className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em]">Subtotal Bill</span>
+                     <span className="font-bold text-gray-300">৳{totalAmount}</span>
+                   </div>
+                   <div className="flex justify-between items-center mb-6">
+                     <span className="text-[10px] font-black uppercase text-gray-500 tracking-[0.2em]">Delivery Fee</span>
+                     <span className="text-emerald-500 font-black text-xs uppercase italic">Free</span>
+                   </div>
+                   <div className="flex justify-between items-center text-3xl font-black italic tracking-tighter">
+                     <span>Total</span>
+                     <span className="text-blue-500">৳{totalAmount}</span>
+                   </div>
+                </div>
 
-               {/* Background Glow */}
-               <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl"></div>
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-600/20 rounded-full blur-3xl"></div>
             </div>
 
             <div className="bg-emerald-50 border border-emerald-100 p-6 rounded-3xl flex items-center gap-4">
