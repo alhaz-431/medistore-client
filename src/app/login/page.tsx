@@ -30,10 +30,29 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok) {
+        // ১. ডাটা সেভ করা
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
-        alert("লগইন সফল হয়েছে! 🚀");
-        window.location.href = "/"; 
+
+        // ২. ডাইনামিক রিডাইরেক্ট লজিক (Role Based)
+        const userRole = data.user.role;
+        
+        if (userRole === "ADMIN") {
+          router.push("/dashboard/admin");
+        } else if (userRole === "SELLER") {
+          router.push("/dashboard/seller");
+        } else if (userRole === "CUSTOMER") {
+          // কাস্টমারদের সরাসরি তাদের অর্ডার লিস্টে পাঠানো বা হোম পেজে পাঠানো
+          router.push("/dashboard/customer/my-orders");
+        } else {
+          router.push("/");
+        }
+
+        // ৩. স্টেট রিফ্রেশ নিশ্চিত করা
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+
       } else {
         alert(data.error || data.message || "লগইন ব্যর্থ হয়েছে!");
       }
@@ -47,12 +66,10 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-[#040610] flex items-center justify-center p-0 md:p-6 overflow-hidden">
-      {/* মেইন কন্টেইনার */}
       <div className="max-w-7xl w-full grid grid-cols-1 md:grid-cols-2 bg-[#0b0f1a] md:rounded-[3.5rem] border border-white/5 shadow-2xl overflow-hidden min-h-[100vh] md:min-h-[85vh]">
         
-        {/* ─── ডান পাশ: এনিমেশন সেকশন (লগইন পেজে এটি ডানে ভালো লাগে) ─── */}
+        {/* ─── ডান পাশ: এনিমেশন সেকশন ─── */}
         <div className="hidden md:flex bg-gradient-to-tr from-[#1e1b4b] to-[#1e3a8a] relative items-center justify-center p-12 overflow-hidden order-last md:order-first">
-          {/* Animated Background Rings */}
           {[1, 2, 3].map((i) => (
             <motion.div 
               key={i}
@@ -83,22 +100,13 @@ export default function LoginPage() {
                 </p>
               </div>
             </motion.div>
-
-            {/* Floating Elements */}
+            
             <motion.div 
               animate={{ y: [0, -20, 0] }} 
               transition={{ duration: 5, repeat: Infinity }}
               className="absolute -top-12 -left-12 bg-blue-500 p-5 rounded-3xl"
             >
               <FiZap className="text-3xl text-white" />
-            </motion.div>
-            
-            <motion.div 
-              animate={{ y: [0, 20, 0] }} 
-              transition={{ duration: 6, repeat: Infinity, delay: 1 }}
-              className="absolute -bottom-10 -right-10 bg-[#040610] p-5 rounded-3xl border border-white/5"
-            >
-              <FiKey className="text-3xl text-blue-500" />
             </motion.div>
           </div>
         </div>
@@ -117,9 +125,6 @@ export default function LoginPage() {
               <h2 className="text-4xl font-black text-white italic uppercase tracking-tighter">
                 Medi<span className="text-blue-500">Store</span> Login
               </h2>
-              <p className="text-slate-500 font-bold text-[10px] uppercase tracking-[0.3em] mt-2">
-                Access your medical account
-              </p>
             </div>
 
             <form onSubmit={handleLogin} className="space-y-6">
@@ -147,12 +152,6 @@ export default function LoginPage() {
                 />
               </div>
 
-              <div className="text-right">
-                <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest cursor-pointer hover:text-white transition-colors">
-                  Forgot Password?
-                </span>
-              </div>
-
               <button 
                 type="submit" 
                 disabled={loading}
@@ -170,7 +169,6 @@ export default function LoginPage() {
             </p>
           </motion.div>
         </div>
-
       </div>
     </div>
   );

@@ -8,7 +8,6 @@ import {
   FiCheckCircle, FiActivity, FiTruck, FiShoppingBag 
 } from "react-icons/fi";
 
-// আপনার লাইভ রেন্ডার ব্যাকএন্ড লিঙ্ক
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://storemedistore.onrender.com/api/v1";
 
 export default function RegisterPage() {
@@ -26,11 +25,10 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      // আপনার ব্যাকএন্ড রাউট অনুযায়ী /auth/register ব্যবহার করা হয়েছে
       const response = await axios.post(`${API_URL}/auth/register`, formData);
       
       if (response.status === 201 || response.status === 200) {
-        alert("অভিনন্দন! রেজিস্ট্রেশন সফল হয়েছে। 🎉");
+        alert("অভিনন্দন! রেজিস্ট্রেশন সফল হয়েছে। 🎉 এখন লগইন করুন।");
         router.push("/login");
       }
     } catch (err: any) {
@@ -43,7 +41,6 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-[#040610] flex items-center justify-center p-0 md:p-6 overflow-hidden">
-      {/* মেইন কন্টেইনার */}
       <div className="max-w-7xl w-full grid grid-cols-1 md:grid-cols-2 bg-[#0b0f1a] md:rounded-[3.5rem] border border-white/5 shadow-2xl overflow-hidden min-h-[100vh] md:min-h-[85vh]">
         
         {/* ─── বাম পাশ: রেজিস্ট্রেশন ফর্ম ─── */}
@@ -66,11 +63,34 @@ export default function RegisterPage() {
             </div>
 
             <form onSubmit={handleRegister} className="space-y-5">
+              
+              {/* ─── PREMIUM ROLE SELECTOR ─── */}
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <button
+                  type="button"
+                  onClick={() => setFormData({...formData, role: 'CUSTOMER'})}
+                  className={`py-4 rounded-2xl border flex flex-col items-center gap-2 transition-all ${formData.role === 'CUSTOMER' ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-[#101726] border-white/5 text-slate-500 hover:border-white/20'}`}
+                >
+                  <FiShoppingBag size={20} />
+                  <span className="text-[10px] font-black uppercase tracking-widest italic">Customer</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormData({...formData, role: 'SELLER'})}
+                  className={`py-4 rounded-2xl border flex flex-col items-center gap-2 transition-all ${formData.role === 'SELLER' ? 'bg-blue-600 border-blue-600 text-white shadow-lg shadow-blue-600/20' : 'bg-[#101726] border-white/5 text-slate-500 hover:border-white/20'}`}
+                >
+                  <FiTruck size={20} />
+                  <span className="text-[10px] font-black uppercase tracking-widest italic">Seller</span>
+                </button>
+              </div>
+
+              {/* INPUT FIELDS */}
               <div className="relative group">
                 <FiUser className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-600 group-focus-within:text-blue-500 transition-colors" />
                 <input 
                   type="text" placeholder="Full Name" 
                   className="w-full pl-12 pr-4 py-4 rounded-2xl bg-[#101726] border border-white/5 focus:border-blue-600 outline-none font-bold text-white transition-all" 
+                  value={formData.name}
                   onChange={(e) => setFormData({...formData, name: e.target.value})} 
                   required 
                 />
@@ -81,20 +101,10 @@ export default function RegisterPage() {
                 <input 
                   type="email" placeholder="Email Address" 
                   className="w-full pl-12 pr-4 py-4 rounded-2xl bg-[#101726] border border-white/5 focus:border-blue-600 outline-none font-bold text-white transition-all" 
+                  value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})} 
                   required 
                 />
-              </div>
-
-              <div className="relative">
-                <select 
-                  value={formData.role} 
-                  onChange={(e) => setFormData({...formData, role: e.target.value})}
-                  className="w-full px-5 py-4 rounded-2xl bg-[#101726] border border-white/5 focus:border-blue-600 outline-none font-bold text-white transition-all appearance-none cursor-pointer"
-                >
-                  <option value="CUSTOMER">REGISTER AS CUSTOMER</option>
-                  <option value="SELLER">REGISTER AS SELLER</option>
-                </select>
               </div>
 
               <div className="relative group">
@@ -102,6 +112,7 @@ export default function RegisterPage() {
                 <input 
                   type="password" placeholder="Password" 
                   className="w-full pl-12 pr-4 py-4 rounded-2xl bg-[#101726] border border-white/5 focus:border-blue-600 outline-none font-bold text-white transition-all" 
+                  value={formData.password}
                   onChange={(e) => setFormData({...formData, password: e.target.value})} 
                   required 
                 />
@@ -126,24 +137,13 @@ export default function RegisterPage() {
 
         {/* ─── ডান পাশ: বিশাল এনিমেশন সেকশন ─── */}
         <div className="hidden md:flex bg-gradient-to-br from-blue-700 to-blue-900 relative items-center justify-center p-12 overflow-hidden">
-          {/* এনিমেটেড ব্যাকগ্রাউন্ড শেইপ */}
           <motion.div 
             animate={{ rotate: 360 }}
             transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
             className="absolute w-[600px] h-[600px] border border-white/5 rounded-[4rem]"
           />
-          <motion.div 
-            animate={{ rotate: -360 }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="absolute w-[400px] h-[400px] border border-white/10 rounded-full"
-          />
-
           <div className="relative z-10 text-center text-white">
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
+            <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ delay: 0.3 }}>
               <div className="bg-white/10 backdrop-blur-xl p-8 rounded-[3rem] border border-white/10 shadow-2xl">
                 <FiCheckCircle className="text-7xl mb-6 mx-auto text-blue-300" />
                 <h3 className="text-5xl font-black italic uppercase tracking-tighter mb-4 leading-none">
@@ -154,38 +154,8 @@ export default function RegisterPage() {
                 </p>
               </div>
             </motion.div>
-
-            {/* ছোট ছোট এনিমেটেড আইকন কার্ড */}
-            <motion.div 
-              animate={{ y: [0, -15, 0] }}
-              transition={{ duration: 4, repeat: Infinity }}
-              className="absolute -top-10 -right-10 bg-white p-5 rounded-3xl shadow-2xl"
-            >
-              <FiShield className="text-3xl text-blue-600" />
-            </motion.div>
-
-            <motion.div 
-              animate={{ y: [0, 15, 0] }}
-              transition={{ duration: 5, repeat: Infinity, delay: 1 }}
-              className="absolute -bottom-10 -left-10 bg-[#040610] p-5 rounded-3xl shadow-2xl border border-white/5"
-            >
-              <FiTruck className="text-3xl text-blue-500" />
-            </motion.div>
-
-            <motion.div 
-              animate={{ x: [0, 10, 0] }}
-              transition={{ duration: 3, repeat: Infinity }}
-              className="absolute top-1/2 -right-20 bg-blue-500 p-4 rounded-2xl"
-            >
-              <FiShoppingBag className="text-2xl text-white" />
-            </motion.div>
           </div>
-
-          {/* ব্লার ইফেক্ট */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-blue-400/20 blur-[120px] rounded-full" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-black/40 blur-[100px] rounded-full" />
         </div>
-
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { FiShoppingCart, FiGrid, FiLogOut } from "react-icons/fi";
+import { FiShoppingCart, FiGrid, FiLogOut, FiUser } from "react-icons/fi";
 
 interface User {
   role: "CUSTOMER" | "SELLER" | "ADMIN";
@@ -15,15 +15,13 @@ export default function Navbar() {
   const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
-  // ডাটা চেক করার ফাংশন
   const checkData = useCallback(() => {
     if (typeof window === "undefined") return;
 
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
+        setUser(JSON.parse(storedUser));
       } catch (e) {
         setUser(null);
       }
@@ -42,50 +40,27 @@ export default function Navbar() {
     }
   }, []);
 
-  // নেক্সট জেএস হাইড্রেশন এরর ফিক্স
   useEffect(() => {
-    let isComponentMounted = true;
-
-    const initialize = () => {
-      if (isComponentMounted) {
-        checkData(); 
-        setMounted(true); 
-      }
-    };
-
-    const timeoutId = setTimeout(initialize, 50);
-
-    // অন্য ট্যাব থেকে লগআউট করলে যেন এখানেও আপডেট হয়
+    setMounted(true);
+    checkData();
     window.addEventListener("storage", checkData);
-
-    return () => {
-      isComponentMounted = false;
-      clearTimeout(timeoutId);
-      window.removeEventListener("storage", checkData);
-    };
+    return () => window.removeEventListener("storage", checkData);
   }, [checkData]);
 
-  // ✅ ড্যাশবোর্ড ক্লিক হ্যান্ডলার (সঠিক পাথ সেট করা হয়েছে)
-  const handleDashboardClick = (e: React.MouseEvent) => {
-    e.preventDefault();
+  const handleDashboardClick = () => {
     if (!user) {
       router.push("/login");
       return;
     }
-    // Navbar.tsx এর ভেতর
-if (user.role === "CUSTOMER") {
-  router.push("/dashboard/customer/my-orders"); // এখানে /customer/ যোগ করুন
-}
-
-    // রোল অনুযায়ী আপনার ফোল্ডার স্ট্রাকচার পাথে পাঠানো
-    if (user.role === "ADMIN") {
-      router.push("/dashboard/admin");
-    } else if (user.role === "SELLER") {
-      router.push("/dashboard/seller");
-    } else {
-      // কাস্টমারের জন্য সঠিক পাথ: /dashboard/customer/my-orders
-      router.push("/dashboard/customer/my-orders");
-    }
+    
+    // রোল অনুযায়ী ডিরেক্টরি পাথ
+    const paths = {
+      ADMIN: "/dashboard/admin",
+      SELLER: "/dashboard/seller",
+      CUSTOMER: "/dashboard/customer/my-orders"
+    };
+    
+    router.push(paths[user.role] || "/");
   };
 
   const handleLogout = () => {
@@ -93,67 +68,68 @@ if (user.role === "CUSTOMER") {
     localStorage.removeItem("token");
     setUser(null);
     router.push("/login");
-    // পেজ রিফ্রেশ করে স্টেট ক্লিন করা
     setTimeout(() => window.location.reload(), 100);
   };
 
+  // হাইড্রেশন এরর এড়াতে স্কেলিটন বা সেমি-ট্রান্সপারেন্ট নেভবার
   if (!mounted) {
     return (
-      <nav className="h-[74px] bg-white border-b w-full flex justify-between items-center px-6 md:px-12">
-        <div className="text-2xl font-black italic text-blue-600 uppercase tracking-tighter">
-          Medi<span className="text-black">Store</span> 💊
+      <nav className="h-[80px] bg-[#040610] border-b border-white/5 w-full flex justify-between items-center px-8 md:px-16 sticky top-0 z-50">
+        <div className="text-2xl font-black italic text-blue-500 uppercase tracking-tighter">
+          Medi<span className="text-white">Store</span>
         </div>
-        <div className="w-48 h-8 bg-gray-50 animate-pulse rounded-lg"></div>
+        <div className="w-32 h-6 bg-white/5 animate-pulse rounded-full"></div>
       </nav>
     );
   }
 
   return (
-    <nav className="bg-white border-b shadow-sm sticky top-0 z-50 py-4 px-6 md:px-12 flex justify-between items-center">
+    <nav className="bg-[#040610]/80 backdrop-blur-xl border-b border-white/5 sticky top-0 z-50 py-5 px-8 md:px-16 flex justify-between items-center transition-all">
+      
       {/* ─── LOGO ─── */}
-      <Link href="/" className="text-2xl font-black italic text-blue-600 tracking-tighter uppercase shrink-0">
-        Medi<span className="text-black">Store</span> 💊
+      <Link href="/" className="text-2xl font-black italic text-blue-500 tracking-tighter uppercase shrink-0 flex items-center gap-2">
+        Medi<span className="text-white">Store</span>
+        <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
       </Link>
 
       {/* ─── MENU ─── */}
-      <div className="flex items-center gap-6 font-black text-[10px] uppercase tracking-[0.2em] text-black">
-        <Link href="/" className="hover:text-blue-600 transition-colors">Home</Link>
-        <Link href="/shop" className="hover:text-blue-600 transition-colors">Shop</Link>
+      <div className="flex items-center gap-8 font-black text-[10px] uppercase tracking-[0.25em]">
+        <Link href="/" className="text-slate-400 hover:text-white transition-all hidden md:block">Home</Link>
+        <Link href="/shop" className="text-slate-400 hover:text-white transition-all hidden md:block">Shop</Link>
         
-        <Link href="/cart" className="relative group p-1">
-          <FiShoppingCart size={18} className="group-hover:text-blue-600 transition-colors" />
+        {/* CART */}
+        <Link href="/cart" className="relative group p-2 bg-white/5 rounded-xl border border-white/5 hover:border-blue-500/50 transition-all">
+          <FiShoppingCart size={18} className="text-slate-300 group-hover:text-blue-500 transition-colors" />
           {cartItems > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[8px] rounded-full w-4 h-4 flex items-center justify-center border-2 border-white font-black">
+            <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-[8px] rounded-md w-4 h-4 flex items-center justify-center font-black shadow-lg">
               {cartItems}
             </span>
           )}
         </Link>
 
         {user ? (
-          /* ✅ লগইন থাকলে এই সেকশনটি একটি কন্টেইনারে দেখাবে */
-          <div className="flex items-center gap-4 border-l border-gray-100 pl-6">
+          <div className="flex items-center gap-4 border-l border-white/10 pl-8">
             <button 
               onClick={handleDashboardClick}
-              className="flex items-center gap-2 text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-lg transition-all border border-transparent hover:border-blue-100"
+              className="flex items-center gap-2 text-blue-500 hover:bg-blue-500 hover:text-white px-4 py-2.5 rounded-xl transition-all border border-blue-500/20 font-black italic"
             >
               <FiGrid size={16} />
-              <span>Dashboard</span>
+              <span className="hidden sm:inline">Dashboard</span>
             </button>
 
             <button 
               onClick={handleLogout}
-              className="flex items-center gap-2 text-red-500 hover:bg-red-50 px-3 py-2 rounded-lg transition-all"
+              className="p-2.5 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
+              title="Logout"
             >
-              <FiLogOut size={16} />
-              <span>Logout</span>
+              <FiLogOut size={18} />
             </button>
           </div>
         ) : (
-          /* ❌ লগইন না থাকলে */
-          <div className="flex items-center gap-4 border-l border-gray-100 pl-6">
-            <Link href="/login" className="text-gray-600 hover:text-blue-600">Login</Link>
-            <Link href="/register" className="bg-blue-600 text-white px-5 py-2.5 rounded-xl hover:bg-black transition-all shadow-md active:scale-95">
-              Register
+          <div className="flex items-center gap-6 border-l border-white/10 pl-8">
+            <Link href="/login" className="text-slate-400 hover:text-white transition-all">Login</Link>
+            <Link href="/register" className="bg-blue-600 hover:bg-white text-white hover:text-blue-950 px-6 py-2.5 rounded-xl transition-all font-black shadow-lg shadow-blue-600/20 active:scale-95">
+              JOIN
             </Link>
           </div>
         )}
