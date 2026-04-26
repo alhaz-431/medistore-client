@@ -1,96 +1,20 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* ─── 1. CUSTOM VARIABLES ─── */
-:root {
-  /* আপনার প্রজেক্টের মেইন ডার্ক থিম (Rich Navy Black) */
-  --background: #040610; 
-  --foreground: #cbd5e1; /* slate-300 */
-  
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-/* ─── 2. TAILWIND THEME CONFIG (v4 Inline) ─── */
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  
-  /* কাস্টম এনিমেশন ও শ্যাডো */
-  --animate-spin-slow: spin 8s linear infinite;
-  --shadow-blue-glow: 0 0 20px rgba(59, 130, 246, 0.2);
-}
-
-/* ─── 3. BASE STYLES ─── */
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
+/* ─── BASE ─── */
 html {
   scroll-behavior: smooth;
-  /* মোবাইলে ট্যাপ করলে যে হাইলাইট হয় সেটা বন্ধ করবে */
   -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  background-color: #040610;
+  color: #cbd5e1;
   overflow-x: hidden;
+  font-family: system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  line-height: 1.5;
-}
-
-/* ─── 4. INPUT & UI IMPROVEMENTS ─── */
-input, select, textarea {
-  background: transparent;
-  outline: none;
-}
-
-/* অটোফিল হলে ব্যাকগ্রাউন্ড কালার ঠিক রাখা */
-input:-webkit-autofill,
-input:-webkit-autofill:hover, 
-input:-webkit-autofill:focus {
-  -webkit-text-fill-color: white;
-  -webkit-box-shadow: 0 0 0px 1000px #101726 inset;
-  transition: background-color 5000s ease-in-out 0s;
-}
-
-/* ─── 5. CUSTOM SCROLLBAR ─── */
-::-webkit-scrollbar {
-  width: 6px;
-}
-
-::-webkit-scrollbar-track {
-  background: var(--background);
-}
-
-::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 100px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #3b82f6;
-}
-
-/* ─── 6. UTILITIES & ANIMATIONS ─── */
-::selection {
-  background-color: rgba(59, 130, 246, 0.4);
-  color: #ffffff;
-}
-
-@keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
-
-/* ইমেজ ড্র্যাগিং বন্ধ করা */
-img {
-  user-select: none;
-  -webkit-user-drag: none;
+  margin: 0;
 }
